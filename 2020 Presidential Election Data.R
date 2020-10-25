@@ -50,5 +50,28 @@ pollavg2016_today <- pollavg2016 %>%
 pollavg2020_today <- pollavg2020 %>%
   filter(daystillelection == daystillelection2020) %>%
   arrange(abs_margin)
-  
-#Movement until the election
+
+#Looking at PA movement
+clintonPA <- pollavg2016 %>%
+  filter(state == "Pennsylvania") %>%
+  select(daystillelection, clinton)
+
+bidenPA <- pollavg2020 %>%
+  filter(state == "Pennsylvania") %>%
+  select(daystillelection, biden)
+
+clinton_bidenPA <- merge(clintonPA, bidenPA,
+                         all.x = TRUE)
+
+clinton_bidenPAplot <- ggplot(clinton_bidenPA, aes(x = daystillelection)) +
+  theme_bw() +
+  geom_line(aes(y = clinton), color = "darkred") +
+  geom_line(aes(y = biden), color ="steelblue") +
+  scale_x_reverse(lim = c(250,0)) +
+  ylab("Democratic share, polling average") +
+  xlab("Days until election") +
+  labs(title = "FiveThirtyEight Polling Average, 2016 vs. 2020",
+       subtitle = "Pennsylvania") +
+  theme(legend.position = "right")
+
+clinton_bidenPAplot
