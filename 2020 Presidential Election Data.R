@@ -5,6 +5,7 @@ library(rstudioapi)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
+eday2012 <- as.Date("2012-11-06")
 eday2016 <- as.Date("2016-11-08")
 eday2020 <- as.Date("2020-11-03")
 
@@ -15,6 +16,17 @@ pollavg19682016 <- read.csv("pres_pollaverages_1968-2016.csv", stringsAsFactors 
 
 
 #Make necessary modifications
+pollavg2012 <- pollavg19682016 %>%
+  select(cycle:pct_estimate, -candidate_id) %>%
+  filter(cycle == "2012") %>%
+  mutate(modeldate = as.Date(modeldate, "%m/%d/%Y"),
+         daystillelection = eday2012 - modeldate) %>%
+  spread(key = candidate_name, value = pct_estimate) %>%
+  rename(obama = `Barack Obama`,
+         romney = `Mitt Romney`) %>%
+  mutate(dem_margin = obama - romney,
+         abs_margin = abs(dem_margin))
+
 pollavg2016 <- pollavg19682016 %>%
   select(cycle:pct_estimate, -candidate_id) %>%
   filter(cycle == "2016") %>%
@@ -43,6 +55,10 @@ pollavg2020 <- pollavg2020[-c(5:6)]
 #Today's snapshot
 daystillelection2020 <- as.numeric(eday2020 - Sys.Date())
 
+pollavg2012_today <- pollavg2012 %>%
+  filter(daystillelection == daystillelection2020) %>%
+  arrange(abs_margin)
+
 pollavg2016_today <- pollavg2016 %>%
   filter(daystillelection == daystillelection2020) %>%
   arrange(abs_margin)
@@ -52,6 +68,10 @@ pollavg2020_today <- pollavg2020 %>%
   arrange(abs_margin)
 
 #Looking at PA movement
+obamaPA <- pollavg2012 %>%
+  filter(state == "Pennsylvania") %>%
+  select(daystillelection, obama)
+
 clintonPA <- pollavg2016 %>%
   filter(state == "Pennsylvania") %>%
   select(daystillelection, clinton)
@@ -60,22 +80,23 @@ bidenPA <- pollavg2020 %>%
   filter(state == "Pennsylvania") %>%
   select(daystillelection, biden)
 
-clinton_bidenPA <- merge(clintonPA, bidenPA,
-                         all.x = TRUE)
+obama_clintonPA <- merge(obamaPA, clintonPA, all.x = TRUE)
+obama_clinton_bidenPA <- merge(obama_clintonPA, bidenPA, all.x = TRUE)
 
-clinton_bidenPAplot <- ggplot(clinton_bidenPA, aes(x = daystillelection)) +
+obama_clinton_bidenPAplot <- ggplot(obama_clinton_bidenPA, aes(x = daystillelection)) +
   theme_bw() +
   geom_line(aes(y = clinton), color = "darkred") +
   geom_line(aes(y = biden), color ="steelblue") +
+  geom_line(aes(y = obama), color = "purple") +
   scale_x_reverse(lim = c(250,0)) +
   ylab("Democratic share, polling average") +
   xlab("Days until election") +
-  labs(title = "FiveThirtyEight Polling Average, 2016 vs. 2020",
+  labs(title = "FiveThirtyEight Polling Average, 2012 vs. 2016 vs. 2020",
        subtitle = "Pennsylvania") +
   theme(legend.position = "right") +
   geom_hline(yintercept = 50, linetype ="dashed", color = "black")
 
-clinton_bidenPAplot
+obama_clinton_bidenPAplot
 
 #Looking at FL movement
 clintonFL <- pollavg2016 %>%
