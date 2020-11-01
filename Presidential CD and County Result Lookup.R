@@ -1,7 +1,12 @@
 # Result lookup
 
+# Libraries
+library(DT)
 library(tidyverse)
 library(politicaldata)
+library(rstudioapi)
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # This is a simple tool to look up and print presidential election results
 # based on year, state, and either congressional district (CD) or county.
@@ -22,8 +27,7 @@ pres_results_county_clean <- pres_results_county %>%
             republican = sum(republican, na.rm = T),
             green = sum(green, na.rm = T),
             other = sum(other, na.rm = T)) %>%
-  mutate(state_po = as.factor(state_po),
-        total = democrat + republican +green + other,
+  mutate(total = democrat + republican +green + other,
          dem_share = democrat/total,
          rep_share = republican/total,
          abs_diff = abs(dem_share-rep_share))
@@ -56,7 +60,8 @@ pres_county_lookup <- function(x,y,z){
          dem,"% of the vote, a difference of ",abs_diff,"%.", collapse = " ")
 }
 
-pres_cd_lookup("IA", "4", "2016")
+pres_cd_lookup("NJ", "11", "2016")
 
 pres_county_lookup("WI","Waukesha","2016")
+
 
